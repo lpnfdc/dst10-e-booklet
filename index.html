@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600&display=swap">
 <style>
-/* Layout: one-screen reader — slim marquee header, the book centred on a night-sky stage, a transport bar with page thumbnails below. Single dark look, matching the printed booklet. */
+/* Layout: one-screen reader — slim marquee header, the book centred on a night-sky stage, a transport bar below (thumbnails on large screens, a page scrubber on phones). Single dark look, matching the printed booklet. */
 :root {
   --night: #12041f;
   --night-2: #1d0833;
@@ -23,6 +23,7 @@
   --ui: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   color-scheme: dark;
 }
+[hidden] { display: none !important; }
 html, body { height: 100%; }
 body {
   background: radial-gradient(120% 80% at 50% 45%, var(--night-2) 0%, var(--night) 70%) var(--night);
@@ -46,7 +47,7 @@ body::before {
   position: relative;
   height: 100%;
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto minmax(0, 1fr) auto;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
 }
@@ -71,41 +72,80 @@ button, select {
   font: 500 13px/1 var(--ui); color: var(--text);
   background: var(--panel); border: 1px solid var(--line); border-radius: 999px;
   height: 36px; padding: 0 14px; cursor: pointer;
-  transition: border-color .15s, background .15s;
+  transition: border-color .15s, background .15s, transform .1s;
+  -webkit-tap-highlight-color: transparent;
 }
 button:hover, select:hover { border-color: var(--violet); }
-button:focus-visible, select:focus-visible, .thumb:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+button:active:not(:disabled) { transform: scale(.94); background: rgba(165, 75, 255, .35); }
+button:focus-visible, select:focus-visible, .thumb:focus-visible, input:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 button:disabled { opacity: .35; cursor: default; }
 .icon-btn { width: 36px; padding: 0; display: inline-grid; place-items: center; }
 .icon-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 select { appearance: none; padding-right: 30px; max-width: 46vw;
   background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%);
-  background-position: calc(100% - 16px) 16px, calc(100% - 11px) 16px; background-size: 5px 5px; background-repeat: no-repeat; }
+  background-position: calc(100% - 16px) 50%, calc(100% - 11px) 50%; background-size: 5px 5px; background-repeat: no-repeat; }
 select option { background: var(--night-2); color: var(--text); }
 
-.stage { position: relative; min-height: 0; display: grid; place-items: center; padding-block: 10px; }
-#book { margin: 0 auto; }
-#book .page { background: var(--night); overflow: hidden; }
-#book .page img { display: block; width: 100%; height: 100%; object-fit: cover; user-select: none; -webkit-user-drag: none; pointer-events: none; }
-.stf__parent { margin: 0 auto; }
-.stf__parent, .stf__wrapper { min-width: 0 !important; min-height: 0 !important; }
-.book-shadow { max-width: 100%; }
-.book-shadow { filter: drop-shadow(0 18px 40px rgba(0,0,0,.55)) drop-shadow(0 0 60px rgba(165,75,255,.18)); }
+/* ---------- The book ---------- */
+.stage {
+  position: relative; min-height: 0; overflow: hidden;
+  display: grid; place-items: center; padding-block: 10px;
+  touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+}
+.book { position: relative; will-change: transform; }
+.slot, .face { position: absolute; top: 0; height: 100%; overflow: hidden; background: var(--night); }
+.slot { box-shadow: 0 12px 32px rgba(0, 0, 0, .5); }
+.slot img, .face img {
+  display: block; width: 100%; height: 100%; object-fit: cover;
+  pointer-events: none; user-select: none; -webkit-user-drag: none;
+}
+.gutter {
+  position: absolute; top: 0; bottom: 0; width: 44px; margin-left: -22px; pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(0,0,0,.28) 46%, rgba(0,0,0,.4) 50%, rgba(0,0,0,.28) 54%, transparent);
+}
+.leaf { position: absolute; top: 0; height: 100%; transform-style: preserve-3d; will-change: transform; }
+.face { left: 0; width: 100%; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.face.back { transform: rotateY(180deg); }
+.face.paper { background: linear-gradient(90deg, #1b0931, #12041f 70%); }
+.shade { position: absolute; inset: 0; pointer-events: none; opacity: 0; }
+.leaf .front .shade { background: linear-gradient(to right, rgba(0,0,0,.05), rgba(0,0,0,.45)); }
+.leaf .back .shade { background: linear-gradient(to left, rgba(0,0,0,.05), rgba(0,0,0,.45)); }
+.leaf.from-right .front .shade { background: linear-gradient(to left, rgba(0,0,0,.05), rgba(0,0,0,.45)); }
+.leaf.from-right .back .shade { background: linear-gradient(to right, rgba(0,0,0,.05), rgba(0,0,0,.45)); }
 
 .nav-arrow {
   position: absolute; top: 50%; transform: translateY(-50%); z-index: 5;
   width: 44px; height: 44px; padding: 0; display: grid; place-items: center;
 }
+.nav-arrow:active:not(:disabled) { transform: translateY(-50%) scale(.94); }
 .nav-arrow svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 .nav-arrow.prev { left: 0; } .nav-arrow.next { right: 0; }
 
+/* ---------- Footer controls ---------- */
 footer {
   display: grid; gap: 8px;
   padding-block: 6px max(12px, env(safe-area-inset-bottom, 0px));
 }
 .transport { display: flex; align-items: center; justify-content: center; gap: 10px; }
-.counter { font: 500 13px var(--ui); color: var(--muted); font-variant-numeric: tabular-nums; min-width: 132px; text-align: center; }
+.mid { display: grid; gap: 6px; justify-items: center; min-width: 0; }
+.counter { font: 500 13px var(--ui); color: var(--muted); font-variant-numeric: tabular-nums; min-width: 132px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 .counter b { color: var(--text); font-weight: 600; }
+.scrub {
+  display: none; width: 100%; height: 28px; margin: 0; background: transparent;
+  -webkit-appearance: none; appearance: none; cursor: pointer; touch-action: pan-x;
+  --pct: 0%;
+}
+.scrub::-webkit-slider-runnable-track {
+  height: 4px; border-radius: 4px;
+  background: linear-gradient(90deg, var(--gold) var(--pct), rgba(196,140,255,.25) var(--pct));
+}
+.scrub::-moz-range-track { height: 4px; border-radius: 4px; background: rgba(196,140,255,.25); }
+.scrub::-moz-range-progress { height: 4px; border-radius: 4px; background: var(--gold); }
+.scrub::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 22px; height: 22px; margin-top: -9px; border-radius: 50%;
+  background: var(--gold); border: 3px solid var(--night); box-shadow: 0 0 0 1px var(--gold);
+}
+.scrub::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: var(--gold); border: 3px solid var(--night); }
 .thumbs {
   display: flex; gap: 8px; overflow-x: auto; padding: 4px 2px 6px; scrollbar-width: thin;
   justify-content: safe center;
@@ -118,13 +158,14 @@ footer {
 .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .thumb:hover { opacity: .9; }
 .thumb[aria-current="true"] { opacity: 1; border-color: var(--gold); transform: translateY(-2px); }
+.hint { font-size: 11px; color: var(--muted); text-align: center; letter-spacing: .03em; transition: opacity .6s; }
+.hint.faded { opacity: 0; }
 
-/* Close-up reader: one page at a time, fit to width, tap to zoom, swipe to turn */
+/* ---------- Close-up reader ---------- */
 .zoom {
   position: fixed; inset: 0; z-index: 50; background: rgba(10, 2, 18, .97);
   display: flex; flex-direction: column;
 }
-[hidden] { display: none !important; }
 .zbar {
   display: flex; align-items: center; gap: 8px;
   padding-top: max(10px, calc(env(safe-area-inset-top, 0px) + 6px));
@@ -148,26 +189,28 @@ footer {
 }
 .zscroll.zoomed img { width: 220%; max-width: none; cursor: zoom-out; }
 .zhint { margin: 0; padding: 6px 16px max(8px, env(safe-area-inset-bottom, 0px)); text-align: center; font-size: 11px; color: var(--muted); }
-.hint { font-size: 11px; color: var(--muted); text-align: center; letter-spacing: .04em; }
 
-/* Touch screens and narrow windows: no side arrows, the transport bar turns pages */
+/* Touch screens and narrow windows: no side arrows (tap the page edges instead) */
 @media (max-width: 900px), (pointer: coarse) {
   .nav-arrow { display: none; }
 }
-/* Phones held upright: compact one-line header, no thumbnail strip, bigger tap targets */
+/* Phones held upright: compact header, page scrubber instead of thumbnails, big round buttons */
 @media (max-width: 640px) {
   header { padding-block: 8px 2px; gap: 8px; }
   .brand h1 { font-size: 16px; }
   .brand p { font-size: 9px; letter-spacing: .16em; }
-  .tools { gap: 6px; }
   .tools .wide { display: none; }
   select { max-width: 138px; padding-left: 12px; font-size: 12px; }
   button, select { height: 40px; }
   .icon-btn { width: 40px; }
   .stage { padding-block: 6px; }
   .thumbs { display: none; }
-  footer { gap: 4px; padding-top: 2px; }
-  .transport { gap: 18px; }
+  footer { gap: 2px; padding-top: 4px; }
+  .transport { gap: 14px; }
+  .transport .icon-btn { width: 48px; height: 48px; flex-shrink: 0; }
+  .transport .icon-btn svg { width: 22px; height: 22px; }
+  .mid { flex: 1; max-width: 260px; gap: 2px; }
+  .scrub { display: block; }
   .counter { min-width: 0; }
 }
 @media (max-width: 440px) {
@@ -189,10 +232,13 @@ footer {
   .icon-btn { width: 34px; }
   .stage { padding-block: 4px; }
   footer { padding-top: 0; padding-bottom: max(6px, env(safe-area-inset-bottom, 0px)); }
+  .transport .icon-btn { width: 40px; height: 40px; }
+  .mid { flex: 1; max-width: 320px; gap: 0; }
+  .scrub { display: block; height: 22px; }
   .zhint { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .thumb, button { transition: none; }
+  .thumb, button, .hint { transition: none; }
 }
 </style>
 </head>
@@ -206,7 +252,6 @@ footer {
       <p>Dance the Night Away</p>
     </div>
     <div class="tools">
-      <label for="toc" hidden>Jump to section</label>
       <select id="toc" aria-label="Jump to section"></select>
       <button class="icon-btn" id="zoomBtn" title="Read this page up close" aria-label="Read this page up close">
         <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M11 8v6M8 11h6"/></svg>
@@ -217,11 +262,19 @@ footer {
     </div>
   </header>
 
-  <main class="stage" id="stage">
+  <main class="stage" id="stage" aria-label="Booklet. Swipe or use the arrow keys to turn pages.">
     <button class="nav-arrow prev" id="prevArrow" aria-label="Previous page">
       <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>
     </button>
-    <div class="book-shadow"><div id="book"></div></div>
+    <div class="book" id="book">
+      <div class="slot" id="slotL"><img alt=""></div>
+      <div class="slot" id="slotR"><img alt=""></div>
+      <div class="gutter" id="gutter"></div>
+      <div class="leaf" id="leaf" hidden>
+        <div class="face front"><img alt=""><i class="shade"></i></div>
+        <div class="face back"><img alt=""><i class="shade"></i></div>
+      </div>
+    </div>
     <button class="nav-arrow next" id="nextArrow" aria-label="Next page">
       <svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
     </button>
@@ -230,11 +283,14 @@ footer {
   <footer>
     <div class="transport">
       <button class="icon-btn" id="prevBtn" aria-label="Previous page"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
-      <div class="counter" id="counter" aria-live="polite"></div>
+      <div class="mid">
+        <div class="counter" id="counter" aria-live="polite"></div>
+        <input class="scrub" id="scrub" type="range" min="1" max="12" step="1" value="1" aria-label="Go to page">
+      </div>
       <button class="icon-btn" id="nextBtn" aria-label="Next page"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
     </div>
     <nav class="thumbs" id="thumbs" aria-label="Pages"></nav>
-    <div class="hint" id="hint">Drag a page corner, click the edges, or use ← → keys to turn pages</div>
+    <div class="hint" id="hint">Drag or click the sides of the page to turn it · click the middle to read up close · ← → keys work too</div>
   </footer>
 </div>
 
@@ -249,7 +305,6 @@ footer {
   <p class="zhint" id="zHint">Tap the page to zoom in. Swipe or use the arrows to change pages.</p>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.js"></script>
 <script>
 const PAGES = ["pages/p01.jpg", "pages/p02.jpg", "pages/p03.jpg", "pages/p04.jpg", "pages/p05.jpg", "pages/p06.jpg", "pages/p07.jpg", "pages/p08.jpg", "pages/p09.jpg", "pages/p10.jpg", "pages/p11.jpg", "pages/p12.jpg"];
 const THUMBS = ["pages/thumbs/p01.jpg", "pages/thumbs/p02.jpg", "pages/thumbs/p03.jpg", "pages/thumbs/p04.jpg", "pages/thumbs/p05.jpg", "pages/thumbs/p06.jpg", "pages/thumbs/p07.jpg", "pages/thumbs/p08.jpg", "pages/thumbs/p09.jpg", "pages/thumbs/p10.jpg", "pages/thumbs/p11.jpg", "pages/thumbs/p12.jpg"];
@@ -257,102 +312,273 @@ const LABELS = ["Front cover","Welcome to the Dance Floor","Lasallian Pointes N'
 const SECTIONS = [[0,"Front cover"],[1,"Welcome"],[2,"About LPNFDC"],[3,"Host & DJ"],[4,"Guests"],[5,"Dance Companies"],[9,"Special Recognition"],[10,"Sponsors & Partners"],[11,"Back cover"]];
 const RATIO = 1060 / 1500;
 const N = PAGES.length;
+const $ = id => document.getElementById(id);
 
-const stage = document.getElementById('stage');
-const bookEl = document.getElementById('book');
-let flip = null, mode = null, current = 0;
+// Decode every page up front so turns never wait on an image
+const preload = PAGES.map(src => { const im = new Image(); im.decoding = 'async'; im.src = src; return im; });
+
+const stage = $('stage'), book = $('book'), slotL = $('slotL'), slotR = $('slotR'), gutter = $('gutter'), leaf = $('leaf');
+const front = leaf.querySelector('.front'), back = leaf.querySelector('.back');
+const fShade = front.querySelector('.shade'), bShade = back.querySelector('.shade');
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
+const coarse = matchMedia('(pointer: coarse)');
+
+let spread = null;   // true = two-page spreads, false = one page at a time
+let pageW = 0, pageH = 0;
+let views = [];      // each view is what's on screen: [left, right] pages, or [page]
+let view = 0;
+let turn = null;     // page turn in progress: { from, to, dir, p }
+let anim = null;     // running animation for that turn
 
 function startPage() {
   const m = /^#page-(\d+)$/.exec(location.hash);
-  const n = m ? Math.min(Math.max(parseInt(m[1], 10), 1), N) : 1;
-  return n - 1;
+  return m ? Math.min(Math.max(parseInt(m[1], 10), 1), N) - 1 : 0;
 }
 
+/* ---------- Layout ---------- */
 // Pick one page or a two-page spread, whichever shows the pages larger.
-// Upright tablets and phones get one big page; wide or sideways screens get spreads.
 function measure() {
   const cs = getComputedStyle(stage);
-  const arrows = getComputedStyle(document.getElementById('prevArrow')).display !== 'none';
+  const arrows = getComputedStyle($('prevArrow')).display !== 'none';
   const w = stage.clientWidth - (arrows ? 120 : 0);
   const h = stage.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
   const single = Math.min(w, h * RATIO);
-  const spread = Math.min(w / 2, h * RATIO);
-  const landscape = spread >= single * 0.85 && spread >= 120;
-  const pageW = Math.max(80, Math.floor(landscape ? spread : single));
-  return { landscape, pageW, bookW: landscape ? pageW * 2 : pageW };
+  const pair = Math.min(w / 2, h * RATIO);
+  const landscape = pair >= single * 0.85 && pair >= 120;
+  return { landscape, pageW: Math.max(80, Math.floor(landscape ? pair : single)) };
 }
 
-let builtW = 0;
-function build(at) {
+function makeViews() {
+  views = [];
+  if (!spread) { for (let i = 0; i < N; i++) views.push([i]); return; }
+  views.push([null, 0]);                       // front cover on its own, on the right
+  for (let i = 1; i < N; i += 2) views.push(i === N - 1 ? [i, null] : [i, i + 1]);
+}
+const viewOf = p => Math.max(0, views.findIndex(v => v.includes(p)));
+const pagesOf = v => views[v].filter(x => x !== null);
+// Slide the book so a lone cover sits in the middle of the screen
+function shiftOf(v) {
+  if (!spread) return 0;
+  const [l, r] = views[v];
+  return l === null ? -pageW / 2 : r === null ? pageW / 2 : 0;
+}
+
+function place(el, left, width) { el.style.left = left + 'px'; el.style.width = width + 'px'; }
+
+function fill(el, page) {
+  const img = el.querySelector('img');
+  if (page === null || page === undefined) { el.hidden = true; return; }
+  el.hidden = false;
+  if (page === 'blank') { el.classList.add('paper'); img.hidden = true; return; }
+  el.classList.remove('paper'); img.hidden = false;
+  if (img.getAttribute('src') !== PAGES[page]) img.src = PAGES[page];
+  img.alt = LABELS[page] + ' (page ' + (page + 1) + ')';
+}
+
+function layout() {
+  finishNow();
+  const first = views.length ? pagesOf(view)[0] : startPage();
   const m = measure();
-  mode = m.landscape; builtW = m.bookW;
-  if (flip) { flip.destroy(); }
-  const host = document.querySelector('.book-shadow');
-  host.innerHTML = '<div id="book"></div>';
-  const el = host.firstChild;
-  host.style.width = m.bookW + 'px';
-  PAGES.forEach((src, i) => {
-    const d = document.createElement('div');
-    d.className = 'page';
-    if (i === 0 || i === N - 1) d.dataset.density = 'hard';
-    const img = document.createElement('img');
-    img.src = src; img.alt = LABELS[i] + ' (page ' + (i + 1) + ')';
-    d.appendChild(img); el.appendChild(d);
-  });
-  flip = new St.PageFlip(el, {
-    width: 1060, height: 1500, size: 'stretch',
-    // The library shows one page when the book is narrower than 2 × minWidth, so set it to match our choice.
-    minWidth: m.landscape ? Math.max(40, m.pageW - 2) : Math.ceil(m.bookW / 2) + 2,
-    maxWidth: 1060, minHeight: 50, maxHeight: 1500,
-    showCover: true, usePortrait: !m.landscape, mobileScrollSupport: false,
-    maxShadowOpacity: 0.45, flippingTime: 800, startPage: at,
-    autoSize: true, showPageCorners: true
-  });
-  flip.loadFromHTML(el.querySelectorAll('.page'));
-  flip.on('flip', e => update(e.data));
-  update(at);
+  const modeChanged = m.landscape !== spread;
+  spread = m.landscape; pageW = m.pageW; pageH = Math.round(pageW / RATIO);
+  book.style.width = (spread ? pageW * 2 : pageW) + 'px';
+  book.style.height = pageH + 'px';
+  book.style.perspective = Math.round(pageW * (spread ? 4.5 : 5.5)) + 'px';
+  gutter.style.left = pageW + 'px';
+  if (modeChanged || !views.length) { makeViews(); view = viewOf(first); }
+  place(slotL, 0, pageW);
+  place(slotR, spread ? pageW : 0, pageW);
+  renderStatic();
 }
 
-function resize() {
-  const m = measure();
-  // Ignore tiny changes (a phone's address bar sliding in and out)
-  if (flip && m.landscape === mode && Math.abs(m.bookW - builtW) < 6) return;
-  build(current);
+function renderStatic() {
+  const v = views[view];
+  leaf.hidden = true;
+  if (spread) { fill(slotL, v[0]); fill(slotR, v[1]); }
+  else { slotL.hidden = true; fill(slotR, v[0]); }
+  gutter.hidden = !(spread && v[0] !== null && v[1] !== null);
+  book.style.transform = `translateX(${shiftOf(view)}px)`;
+  updateUI();
 }
 
-function visiblePages(i) {
-  if (!mode || i === 0 || i === N - 1) return [i];
-  const left = i % 2 === 1 ? i : i - 1;
-  return [left, Math.min(left + 1, N - 1)];
+/* ---------- Page turn ---------- */
+function beginTurn(to) {
+  const from = view, dir = to > from ? 1 : -1, F = views[from], T = views[to];
+  gutter.hidden = true;
+  if (spread) {
+    if (dir > 0) {          // right page lifts and folds over to the left
+      fill(slotL, F[0]); fill(slotR, T[1]);
+      place(leaf, pageW, pageW); leaf.style.transformOrigin = 'left center'; leaf.classList.remove('from-right');
+      fill(front, F[1]); fill(back, T[0]);
+    } else {                // left page lifts and folds back to the right
+      fill(slotL, T[0]); fill(slotR, F[1]);
+      place(leaf, 0, pageW); leaf.style.transformOrigin = 'right center'; leaf.classList.add('from-right');
+      fill(front, F[0]); fill(back, T[1]);
+    }
+  } else {                  // single page: current page turns away to the left, or the previous one turns back in
+    place(leaf, 0, pageW); leaf.style.transformOrigin = 'left center'; leaf.classList.remove('from-right');
+    if (dir > 0) { fill(slotR, T[0]); fill(front, F[0]); }
+    else { fill(slotR, F[0]); fill(front, T[0]); }
+    fill(back, 'blank');
+  }
+  turn = { from, to, dir, p: 0 };
+  leaf.hidden = false;
+  setP(0);
 }
 
-function update(i) {
-  current = i;
-  const vis = visiblePages(i);
-  const counter = document.getElementById('counter');
-  counter.innerHTML = vis.length === 2
+function setP(p) {
+  turn.p = p;
+  let a;
+  if (spread) a = turn.dir > 0 ? -180 * p : 180 * p;
+  else a = turn.dir > 0 ? -180 * p : -180 * (1 - p);
+  leaf.style.transform = `rotateY(${a}deg)`;
+  const s = Math.sin(Math.PI * p);
+  fShade.style.opacity = s; bShade.style.opacity = s;
+  const x = shiftOf(turn.from) + (shiftOf(turn.to) - shiftOf(turn.from)) * p;
+  book.style.transform = `translateX(${x}px)`;
+}
+
+const easeOut = k => 1 - Math.pow(1 - k, 3);
+const easeInOut = k => k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+const fullTurnMs = () => reduceMotion.matches ? 0 : (spread ? 700 : 560);
+
+function animateTo(target, ms) {
+  if (anim) cancelAnimationFrame(anim.raf);
+  const p0 = turn.p, t0 = performance.now();
+  if (ms <= 0) { anim = null; endTurn(target); return; }
+  const ease = (p0 === 0 && target === 1) ? easeInOut : easeOut;
+  anim = { target, raf: 0 };
+  const step = now => {
+    const k = Math.min(1, (now - t0) / ms);
+    setP(p0 + (target - p0) * ease(k));
+    if (k < 1) anim.raf = requestAnimationFrame(step);
+    else { anim = null; endTurn(target); }
+  };
+  anim.raf = requestAnimationFrame(step);
+}
+
+function endTurn(target) {
+  if (!turn) return;
+  if (target >= 1) { view = turn.to; turnsDone++; }
+  turn = null;
+  renderStatic();
+}
+
+// Jump any turn in progress to its end, so quick repeated taps and swipes never wait
+function finishNow() {
+  if (anim) { cancelAnimationFrame(anim.raf); const t = anim.target; anim = null; endTurn(t); }
+  else if (turn) endTurn(0);
+}
+
+function turnTo(to) {
+  finishNow();
+  if (to < 0 || to >= views.length || to === view) return;
+  beginTurn(to);
+  animateTo(1, fullTurnMs());
+}
+function next() { finishNow(); turnTo(view + 1); }
+function prev() { finishNow(); turnTo(view - 1); }
+function go(page) { finishNow(); turnTo(viewOf(page)); }
+
+/* ---------- Touch, pen and mouse ---------- */
+// The page follows your finger from the first movement; a quick flick is enough to turn it.
+let g = null;
+stage.addEventListener('pointerdown', e => {
+  if (e.button > 0 || e.target.closest('button')) return;
+  finishNow();
+  g = { id: e.pointerId, x0: e.clientX, y0: e.clientY, drag: false, edge: false, pts: [[e.clientX, performance.now()]] };
+  try { stage.setPointerCapture(e.pointerId); } catch (err) {}
+});
+stage.addEventListener('pointermove', e => {
+  if (!g) { hoverCursor(e); return; }
+  if (e.pointerId !== g.id) return;
+  const dx = e.clientX - g.x0, dy = e.clientY - g.y0;
+  const now = performance.now();
+  g.pts.push([e.clientX, now]);
+  while (g.pts.length > 2 && now - g.pts[0][1] > 100) g.pts.shift();
+  if (!g.drag) {
+    if (Math.abs(dx) < 6 || Math.abs(dx) < Math.abs(dy) * 0.8) return;
+    g.drag = true; g.dir = dx < 0 ? 1 : -1;
+    const to = view + g.dir;
+    if (to < 0 || to >= views.length) g.edge = true; else beginTurn(to);
+  }
+  if (g.edge) {   // first or last page: a small rubber-band nudge says there's nothing more
+    const nudge = Math.max(-24, Math.min(24, dx * 0.18));
+    book.style.transform = `translateX(${shiftOf(view) + nudge}px)`;
+    return;
+  }
+  const dist = spread ? pageW * 1.3 : pageW * 0.75;
+  setP(Math.max(0, Math.min(1, (-dx * g.dir) / dist)));
+});
+function release(e, cancelled) {
+  if (!g || e.pointerId !== g.id) return;
+  const gg = g; g = null;
+  if (!gg.drag) { if (!cancelled) tap(e); return; }
+  if (gg.edge) {
+    book.style.transition = 'transform .25s cubic-bezier(.2,.8,.2,1)';
+    renderStatic();
+    setTimeout(() => { book.style.transition = ''; }, 260);
+    return;
+  }
+  const a = gg.pts[0], b = gg.pts[gg.pts.length - 1];
+  const v = (b[0] - a[0]) / Math.max(1, b[1] - a[1]);   // px per ms
+  const fling = -v * gg.dir;                             // speed in the turning direction
+  const commit = !cancelled && (fling > 0.25 || (turn.p > 0.35 && fling > -0.15));
+  const remaining = commit ? 1 - turn.p : turn.p;
+  animateTo(commit ? 1 : 0, reduceMotion.matches ? 0 : Math.max(150, remaining * fullTurnMs() * 0.85));
+}
+stage.addEventListener('pointerup', e => release(e, false));
+stage.addEventListener('pointercancel', e => release(e, true));
+stage.addEventListener('contextmenu', e => e.preventDefault());
+
+// Where on the visible pages a point falls: 'prev', 'next', or a page number to read up close
+function zoneAt(x, y) {
+  const r = book.getBoundingClientRect();
+  const v = views[view];
+  const left = r.left + (spread && v[0] === null ? pageW : 0);
+  const width = pagesOf(view).length * pageW;
+  const fx = (x - left) / width;
+  if (fx < 0.28) return view > 0 ? 'prev' : null;
+  if (fx > 0.72) return view < views.length - 1 ? 'next' : null;
+  if (y < r.top || y > r.bottom) return null;
+  const vis = pagesOf(view);
+  return vis.length === 2 ? vis[fx < 0.5 ? 0 : 1] : vis[0];
+}
+function tap(e) {
+  const z = zoneAt(e.clientX, e.clientY);
+  if (z === 'prev') prev();
+  else if (z === 'next') next();
+  else if (typeof z === 'number') openZoom(z);
+}
+function hoverCursor(e) {
+  if (e.pointerType !== 'mouse') return;
+  const z = zoneAt(e.clientX, e.clientY);
+  stage.style.cursor = z === 'prev' ? 'w-resize' : z === 'next' ? 'e-resize' : typeof z === 'number' ? 'zoom-in' : 'default';
+}
+
+/* ---------- Status, contents, thumbnails, scrubber ---------- */
+let turnsDone = 0;
+function updateUI() {
+  const vis = pagesOf(view);
+  $('counter').innerHTML = vis.length === 2
     ? `Pages <b>${vis[0] + 1}–${vis[1] + 1}</b> of ${N}`
     : `Page <b>${vis[0] + 1}</b> of ${N}`;
   document.querySelectorAll('.thumb').forEach((t, k) => {
-    const on = vis.includes(k);
-    t.setAttribute('aria-current', on ? 'true' : 'false');
-    if (k === vis[0]) t.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+    t.setAttribute('aria-current', vis.includes(k) ? 'true' : 'false');
+    if (k === vis[0] && thumbs.offsetParent) t.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
   });
-  const atStart = vis[0] === 0, atEnd = vis[vis.length - 1] === N - 1;
-  ['prevBtn','prevArrow'].forEach(id => document.getElementById(id).disabled = atStart);
-  ['nextBtn','nextArrow'].forEach(id => document.getElementById(id).disabled = atEnd);
+  const atStart = view === 0, atEnd = view === views.length - 1;
+  ['prevBtn', 'prevArrow'].forEach(id => $(id).disabled = atStart);
+  ['nextBtn', 'nextArrow'].forEach(id => $(id).disabled = atEnd);
   let sec = 0; SECTIONS.forEach(([p], k) => { if (p <= vis[0]) sec = k; });
-  document.getElementById('toc').value = String(SECTIONS[sec][0]);
+  toc.value = String(SECTIONS[sec][0]);
+  if (!scrubbing) setScrub(vis[0] + 1);
+  if (turnsDone >= 2) $('hint').classList.add('faded');
   const h = '#page-' + (vis[0] + 1);
-  if (location.hash !== h) { try { history.replaceState(null, '', h); } catch (e) {} }
+  if (location.hash !== h) { try { history.replaceState(null, '', h); } catch (err) {} }
 }
 
-function go(i) { if (flip) flip.flip(i); }
-function next() { flip && flip.flipNext(); }
-function prev() { flip && flip.flipPrev(); }
-
-// Contents
-const toc = document.getElementById('toc');
+const toc = $('toc');
 const narrow = matchMedia('(max-width: 440px)');
 function tocLabels() {
   toc.innerHTML = '';
@@ -362,11 +588,10 @@ function tocLabels() {
   });
 }
 tocLabels();
-narrow.addEventListener('change', () => { tocLabels(); update(current); });
+narrow.addEventListener('change', () => { tocLabels(); updateUI(); });
 toc.addEventListener('change', () => go(parseInt(toc.value, 10)));
 
-// Thumbnails
-const thumbs = document.getElementById('thumbs');
+const thumbs = $('thumbs');
 THUMBS.forEach((src, i) => {
   const b = document.createElement('button');
   b.className = 'thumb'; b.id = 'thumb-' + (i + 1);
@@ -377,79 +602,96 @@ THUMBS.forEach((src, i) => {
   thumbs.appendChild(b);
 });
 
-document.getElementById('prevBtn').onclick = prev;
-document.getElementById('nextBtn').onclick = next;
-document.getElementById('prevArrow').onclick = prev;
-document.getElementById('nextArrow').onclick = next;
+// Scrubber: drag to preview a page name, let go to turn there
+const scrub = $('scrub');
+scrub.max = String(N);
+let scrubbing = false;
+function setScrub(n) { scrub.value = String(n); scrub.style.setProperty('--pct', ((n - 1) / (N - 1) * 100) + '%'); }
+scrub.addEventListener('input', () => {
+  scrubbing = true;
+  const n = parseInt(scrub.value, 10);
+  setScrub(n);
+  $('counter').innerHTML = `<b>${n}</b> · ${LABELS[n - 1]}`;
+});
+scrub.addEventListener('change', () => {
+  scrubbing = false;
+  const n = parseInt(scrub.value, 10) - 1;
+  if (pagesOf(view).includes(n)) updateUI(); else go(n);
+});
 
-// Close-up reader: one page at a time, fit to width, tap to zoom, swipe to change page
-const zoom = document.getElementById('zoom'), zoomImg = document.getElementById('zoomImg');
-const zScroll = document.getElementById('zScroll');
+$('prevBtn').onclick = prev;
+$('nextBtn').onclick = next;
+$('prevArrow').onclick = prev;
+$('nextArrow').onclick = next;
+
+/* ---------- Close-up reader ---------- */
+const zoom = $('zoom'), zoomImg = $('zoomImg'), zScroll = $('zScroll');
 let zAt = 0;
 function showZ(i) {
   zAt = Math.min(Math.max(i, 0), N - 1);
   zScroll.classList.remove('zoomed');
   zoomImg.src = PAGES[zAt];
   zoomImg.alt = LABELS[zAt] + ' (page ' + (zAt + 1) + ')';
-  document.getElementById('zLabel').innerHTML = `<b>${zAt + 1}</b> / ${N} · ${LABELS[zAt]}`;
-  document.getElementById('zPrev').disabled = zAt === 0;
-  document.getElementById('zNext').disabled = zAt === N - 1;
+  $('zLabel').innerHTML = `<b>${zAt + 1}</b> / ${N} · ${LABELS[zAt]}`;
+  $('zPrev').disabled = zAt === 0;
+  $('zNext').disabled = zAt === N - 1;
   zScroll.scrollTop = 0; zScroll.scrollLeft = 0;
 }
-function openZoom() {
-  showZ(visiblePages(current)[0]);
+function openZoom(page) {
+  finishNow();
+  showZ(typeof page === 'number' ? page : pagesOf(view)[0]);
   zoom.hidden = false;
-  document.getElementById('zoomClose').focus();
+  $('zoomClose').focus();
 }
 function closeZoom() {
   zoom.hidden = true;
-  // Bring the book to the page the reader stopped on
-  if (flip && !visiblePages(current).includes(zAt)) { flip.turnToPage(zAt); update(zAt); }
-  document.getElementById('zoomBtn').focus();
+  // Open the book at the page the reader stopped on
+  if (!pagesOf(view).includes(zAt)) { view = viewOf(zAt); renderStatic(); }
+  $('zoomBtn').focus();
 }
-document.getElementById('zoomBtn').onclick = openZoom;
-document.getElementById('zoomClose').onclick = closeZoom;
-document.getElementById('zPrev').onclick = () => showZ(zAt - 1);
-document.getElementById('zNext').onclick = () => showZ(zAt + 1);
+$('zoomBtn').onclick = () => openZoom();
+$('zoomClose').onclick = closeZoom;
+$('zPrev').onclick = () => showZ(zAt - 1);
+$('zNext').onclick = () => showZ(zAt + 1);
 
-// Tap the page to zoom in on the spot you tapped; tap again to fit the width
-let swipe = null, swiped = false;
+// Tap the page to zoom in on that spot; tap again to fit the width
+let zSwipe = null, zSwiped = false;
 zoomImg.addEventListener('click', e => {
-  if (swiped) { swiped = false; return; }
+  if (zSwiped) { zSwiped = false; return; }
   const r = zoomImg.getBoundingClientRect();
   const fx = (e.clientX - r.left) / r.width, fy = (e.clientY - r.top) / r.height;
-  const on = zScroll.classList.toggle('zoomed');
-  if (on) {
+  if (zScroll.classList.toggle('zoomed')) {
     const r2 = zoomImg.getBoundingClientRect();
     zScroll.scrollLeft = fx * r2.width - zScroll.clientWidth / 2;
     zScroll.scrollTop = fy * r2.height - zScroll.clientHeight / 2;
   }
 });
 zScroll.addEventListener('touchstart', e => {
-  if (e.touches.length !== 1 || zScroll.classList.contains('zoomed')) { swipe = null; return; }
-  swipe = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  if (e.touches.length !== 1 || zScroll.classList.contains('zoomed')) { zSwipe = null; return; }
+  zSwipe = { x: e.touches[0].clientX, y: e.touches[0].clientY, t: performance.now() };
 }, { passive: true });
 zScroll.addEventListener('touchend', e => {
-  if (!swipe) return;
-  const t = e.changedTouches[0], dx = t.clientX - swipe.x, dy = t.clientY - swipe.y;
-  swipe = null;
-  if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) { swiped = true; setTimeout(() => swiped = false, 400); showZ(zAt + (dx < 0 ? 1 : -1)); }
+  if (!zSwipe) return;
+  const t = e.changedTouches[0], dx = t.clientX - zSwipe.x, dy = t.clientY - zSwipe.y;
+  zSwipe = null;
+  if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.3) {
+    zSwiped = true; setTimeout(() => zSwiped = false, 400);
+    showZ(zAt + (dx < 0 ? 1 : -1));
+  }
 }, { passive: true });
 
-// Touch screens get touch instructions
-if (matchMedia('(pointer: coarse)').matches) {
-  document.getElementById('hint').textContent = 'Swipe to turn pages · tap the magnifier to zoom';
+/* ---------- Everything else ---------- */
+if (coarse.matches) {
+  $('hint').textContent = 'Swipe or tap the sides to turn pages · tap the middle to read up close';
 }
 
-// Full screen
-document.getElementById('fsBtn').onclick = async () => {
+$('fsBtn').onclick = async () => {
   try {
     if (document.fullscreenElement) await document.exitFullscreen();
     else await document.documentElement.requestFullscreen();
-  } catch (e) { document.getElementById('fsBtn').disabled = true; }
+  } catch (err) { $('fsBtn').disabled = true; }
 };
 
-// Keyboard
 document.addEventListener('keydown', e => {
   if (!zoom.hidden) {
     if (e.key === 'Escape') closeZoom();
@@ -457,18 +699,17 @@ document.addEventListener('keydown', e => {
     else if (e.key === 'ArrowLeft') showZ(zAt - 1);
     return;
   }
-  if (e.target.tagName === 'SELECT') return;
-  if (e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); next(); }
+  if (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT') return;
+  if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); next(); }
   else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); prev(); }
   else if (e.key === 'Home') go(0);
   else if (e.key === 'End') go(N - 1);
 });
 
-window.addEventListener('hashchange', () => { const p = startPage(); if (!visiblePages(current).includes(p)) go(p); });
-let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(resize, 120); });
+window.addEventListener('hashchange', () => { const p = startPage(); if (!pagesOf(view).includes(p)) go(p); });
+let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(layout, 100); });
 
-current = startPage();
-build(current);
+layout();
 </script>
 
 </body>
