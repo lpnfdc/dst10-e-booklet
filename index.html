@@ -61,6 +61,7 @@ header {
   font-size: clamp(18px, 2.4vw, 26px); letter-spacing: .04em; line-height: 1.05;
   text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
+.brand h1 .short { display: none; }
 .brand h1 .d { color: #5b74ff; } .brand h1 .s { color: var(--violet); } .brand h1 .t { color: var(--pink); }
 .brand p {
   margin: 2px 0 0; font-size: 11px; letter-spacing: .22em; text-transform: uppercase; color: var(--gold);
@@ -118,27 +119,77 @@ footer {
 .thumb:hover { opacity: .9; }
 .thumb[aria-current="true"] { opacity: 1; border-color: var(--gold); transform: translateY(-2px); }
 
+/* Close-up reader: one page at a time, fit to width, tap to zoom, swipe to turn */
 .zoom {
-  position: fixed; inset: 0; z-index: 50; background: rgba(10, 2, 18, .94);
-  overflow: auto; -webkit-overflow-scrolling: touch;
-  padding: max(56px, calc(env(safe-area-inset-top, 0px) + 56px)) max(16px, env(safe-area-inset-right, 0px)) max(24px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  position: fixed; inset: 0; z-index: 50; background: rgba(10, 2, 18, .97);
+  display: flex; flex-direction: column;
 }
-.zoom img { display: block; width: min(100%, 1060px); max-width: 100%; margin: 0 auto; border-radius: 2px; box-shadow: 0 10px 40px rgba(0,0,0,.6); }
-.zoom .close { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 12px); right: max(16px, env(safe-area-inset-right, 0px)); }
+[hidden] { display: none !important; }
+.zbar {
+  display: flex; align-items: center; gap: 8px;
+  padding-top: max(10px, calc(env(safe-area-inset-top, 0px) + 6px));
+  padding-bottom: 10px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  border-bottom: 1px solid var(--line);
+}
+.zlabel { flex: 1; min-width: 0; text-align: center; font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.zlabel b { color: var(--text); font-weight: 600; }
+.zscroll {
+  flex: 1; min-height: 0; overflow: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
+  padding-top: 16px;
+  padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.zscroll img {
+  display: block; width: 100%; max-width: 1060px; height: auto; margin: 0 auto;
+  border-radius: 2px; box-shadow: 0 10px 40px rgba(0,0,0,.6); cursor: zoom-in;
+}
+.zscroll.zoomed img { width: 220%; max-width: none; cursor: zoom-out; }
+.zhint { margin: 0; padding: 6px 16px max(8px, env(safe-area-inset-bottom, 0px)); text-align: center; font-size: 11px; color: var(--muted); }
 .hint { font-size: 11px; color: var(--muted); text-align: center; letter-spacing: .04em; }
 
-@media (max-width: 640px) {
+/* Touch screens and narrow windows: no side arrows, the transport bar turns pages */
+@media (max-width: 900px), (pointer: coarse) {
   .nav-arrow { display: none; }
-  .tools .wide { display: none; }
-  .thumb { width: 34px; }
-  .hint { display: none; }
-  .brand h1 { white-space: normal; font-size: 17px; }
-  .brand p { font-size: 9px; letter-spacing: .16em; }
-  select { max-width: 150px; padding-left: 12px; }
 }
-@media (max-height: 520px) {
-  .thumbs, .hint { display: none; }
+/* Phones held upright: compact one-line header, no thumbnail strip, bigger tap targets */
+@media (max-width: 640px) {
+  header { padding-block: 8px 2px; gap: 8px; }
+  .brand h1 { font-size: 16px; }
+  .brand p { font-size: 9px; letter-spacing: .16em; }
+  .tools { gap: 6px; }
+  .tools .wide { display: none; }
+  select { max-width: 138px; padding-left: 12px; font-size: 12px; }
+  button, select { height: 40px; }
+  .icon-btn { width: 40px; }
+  .stage { padding-block: 6px; }
+  .thumbs { display: none; }
+  footer { gap: 4px; padding-top: 2px; }
+  .transport { gap: 18px; }
+  .counter { min-width: 0; }
+}
+@media (max-width: 440px) {
+  .brand h1 .long { display: none; }
+  .brand h1 .short { display: inline; font-size: 22px; letter-spacing: .02em; }
+  .brand p { font-size: 8px; letter-spacing: .12em; }
+  select { max-width: 170px; }
+}
+@media (max-width: 340px) {
   .brand p { display: none; }
+  select { max-width: 140px; }
+}
+/* Phones turned sideways and other short screens: slim header and footer so the pages get the height */
+@media (max-height: 520px) {
+  header { padding-block: 6px 0; }
+  .brand h1 { font-size: 16px; }
+  .brand p, .thumbs, .hint { display: none; }
+  button, select { height: 34px; }
+  .icon-btn { width: 34px; }
+  .stage { padding-block: 4px; }
+  footer { padding-top: 0; padding-bottom: max(6px, env(safe-area-inset-bottom, 0px)); }
+  .zhint { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   .thumb, button { transition: none; }
@@ -151,7 +202,7 @@ footer {
 <div class="app">
   <header>
     <div class="brand">
-      <h1><span class="d">Dance</span> <span class="s">Series</span> <span class="t">Track</span> 10</h1>
+      <h1><span class="long"><span class="d">Dance</span> <span class="s">Series</span> <span class="t">Track</span> 10</span><span class="short" aria-hidden="true"><span class="d">D</span><span class="s">S</span><span class="t">T</span> 10</span></h1>
       <p>Dance the Night Away</p>
     </div>
     <div class="tools">
@@ -183,13 +234,19 @@ footer {
       <button class="icon-btn" id="nextBtn" aria-label="Next page"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
     </div>
     <nav class="thumbs" id="thumbs" aria-label="Pages"></nav>
-    <div class="hint">Drag a page corner, click the edges, or use ← → keys to turn pages</div>
+    <div class="hint" id="hint">Drag a page corner, click the edges, or use ← → keys to turn pages</div>
   </footer>
 </div>
 
-<div class="zoom" id="zoom" hidden role="dialog" aria-label="Page close-up">
-  <button class="close" id="zoomClose">Close</button>
-  <img id="zoomImg" alt="">
+<div class="zoom" id="zoom" hidden role="dialog" aria-modal="true" aria-label="Page close-up">
+  <div class="zbar">
+    <button class="icon-btn" id="zPrev" aria-label="Previous page"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <div class="zlabel" id="zLabel" aria-live="polite"></div>
+    <button class="icon-btn" id="zNext" aria-label="Next page"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+    <button id="zoomClose">Close</button>
+  </div>
+  <div class="zscroll" id="zScroll"><img id="zoomImg" alt=""></div>
+  <p class="zhint" id="zHint">Tap the page to zoom in. Swipe or use the arrows to change pages.</p>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.js"></script>
@@ -211,18 +268,24 @@ function startPage() {
   return n - 1;
 }
 
+// Pick one page or a two-page spread, whichever shows the pages larger.
+// Upright tablets and phones get one big page; wide or sideways screens get spreads.
 function measure() {
   const cs = getComputedStyle(stage);
-  const w = stage.clientWidth - (window.innerWidth > 640 ? 120 : 0);
+  const arrows = getComputedStyle(document.getElementById('prevArrow')).display !== 'none';
+  const w = stage.clientWidth - (arrows ? 120 : 0);
   const h = stage.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
-  const landscape = w >= 600 && h * RATIO >= 300;
-  const pageW = Math.floor(landscape ? Math.min(w / 2, h * RATIO) : Math.min(w, h * RATIO));
+  const single = Math.min(w, h * RATIO);
+  const spread = Math.min(w / 2, h * RATIO);
+  const landscape = spread >= single * 0.85 && spread >= 120;
+  const pageW = Math.max(80, Math.floor(landscape ? spread : single));
   return { landscape, pageW, bookW: landscape ? pageW * 2 : pageW };
 }
 
+let builtW = 0;
 function build(at) {
   const m = measure();
-  mode = m.landscape;
+  mode = m.landscape; builtW = m.bookW;
   if (flip) { flip.destroy(); }
   const host = document.querySelector('.book-shadow');
   host.innerHTML = '<div id="book"></div>';
@@ -238,7 +301,9 @@ function build(at) {
   });
   flip = new St.PageFlip(el, {
     width: 1060, height: 1500, size: 'stretch',
-    minWidth: 300, maxWidth: 1060, minHeight: 212, maxHeight: 1500,
+    // The library shows one page when the book is narrower than 2 × minWidth, so set it to match our choice.
+    minWidth: m.landscape ? Math.max(40, m.pageW - 2) : Math.ceil(m.bookW / 2) + 2,
+    maxWidth: 1060, minHeight: 50, maxHeight: 1500,
     showCover: true, usePortrait: !m.landscape, mobileScrollSupport: false,
     maxShadowOpacity: 0.45, flippingTime: 800, startPage: at,
     autoSize: true, showPageCorners: true
@@ -250,9 +315,9 @@ function build(at) {
 
 function resize() {
   const m = measure();
-  if (!flip || m.landscape !== mode) { build(current); return; }
-  document.querySelector('.book-shadow').style.width = m.bookW + 'px';
-  flip.update();
+  // Ignore tiny changes (a phone's address bar sliding in and out)
+  if (flip && m.landscape === mode && Math.abs(m.bookW - builtW) < 6) return;
+  build(current);
 }
 
 function visiblePages(i) {
@@ -288,9 +353,16 @@ function prev() { flip && flip.flipPrev(); }
 
 // Contents
 const toc = document.getElementById('toc');
-SECTIONS.forEach(([p, name]) => {
-  const o = document.createElement('option'); o.value = String(p); o.textContent = `p. ${p + 1} · ${name}`; toc.appendChild(o);
-});
+const narrow = matchMedia('(max-width: 440px)');
+function tocLabels() {
+  toc.innerHTML = '';
+  SECTIONS.forEach(([p, name]) => {
+    const o = document.createElement('option'); o.value = String(p);
+    o.textContent = narrow.matches ? name : `p. ${p + 1} · ${name}`; toc.appendChild(o);
+  });
+}
+tocLabels();
+narrow.addEventListener('change', () => { tocLabels(); update(current); });
 toc.addEventListener('change', () => go(parseInt(toc.value, 10)));
 
 // Thumbnails
@@ -310,22 +382,64 @@ document.getElementById('nextBtn').onclick = next;
 document.getElementById('prevArrow').onclick = prev;
 document.getElementById('nextArrow').onclick = next;
 
-// Close-up reader
+// Close-up reader: one page at a time, fit to width, tap to zoom, swipe to change page
 const zoom = document.getElementById('zoom'), zoomImg = document.getElementById('zoomImg');
-let zoomPages = [], zoomAt = 0;
-function openZoom() {
-  zoomPages = visiblePages(current); zoomAt = 0;
-  zoom.innerHTML = '<button class="close" id="zoomClose">Close</button>';
-  zoomPages.forEach(k => {
-    const img = document.createElement('img'); img.src = PAGES[k]; img.alt = LABELS[k] + ' (page ' + (k + 1) + ')';
-    img.style.marginBottom = '16px'; zoom.appendChild(img);
-  });
-  zoom.querySelector('#zoomClose').onclick = closeZoom;
-  zoom.hidden = false; zoom.scrollTop = 0; zoom.querySelector('#zoomClose').focus();
+const zScroll = document.getElementById('zScroll');
+let zAt = 0;
+function showZ(i) {
+  zAt = Math.min(Math.max(i, 0), N - 1);
+  zScroll.classList.remove('zoomed');
+  zoomImg.src = PAGES[zAt];
+  zoomImg.alt = LABELS[zAt] + ' (page ' + (zAt + 1) + ')';
+  document.getElementById('zLabel').innerHTML = `<b>${zAt + 1}</b> / ${N} · ${LABELS[zAt]}`;
+  document.getElementById('zPrev').disabled = zAt === 0;
+  document.getElementById('zNext').disabled = zAt === N - 1;
+  zScroll.scrollTop = 0; zScroll.scrollLeft = 0;
 }
-function closeZoom() { zoom.hidden = true; document.getElementById('zoomBtn').focus(); }
+function openZoom() {
+  showZ(visiblePages(current)[0]);
+  zoom.hidden = false;
+  document.getElementById('zoomClose').focus();
+}
+function closeZoom() {
+  zoom.hidden = true;
+  // Bring the book to the page the reader stopped on
+  if (flip && !visiblePages(current).includes(zAt)) { flip.turnToPage(zAt); update(zAt); }
+  document.getElementById('zoomBtn').focus();
+}
 document.getElementById('zoomBtn').onclick = openZoom;
-zoom.addEventListener('click', e => { if (e.target === zoom) closeZoom(); });
+document.getElementById('zoomClose').onclick = closeZoom;
+document.getElementById('zPrev').onclick = () => showZ(zAt - 1);
+document.getElementById('zNext').onclick = () => showZ(zAt + 1);
+
+// Tap the page to zoom in on the spot you tapped; tap again to fit the width
+let swipe = null, swiped = false;
+zoomImg.addEventListener('click', e => {
+  if (swiped) { swiped = false; return; }
+  const r = zoomImg.getBoundingClientRect();
+  const fx = (e.clientX - r.left) / r.width, fy = (e.clientY - r.top) / r.height;
+  const on = zScroll.classList.toggle('zoomed');
+  if (on) {
+    const r2 = zoomImg.getBoundingClientRect();
+    zScroll.scrollLeft = fx * r2.width - zScroll.clientWidth / 2;
+    zScroll.scrollTop = fy * r2.height - zScroll.clientHeight / 2;
+  }
+});
+zScroll.addEventListener('touchstart', e => {
+  if (e.touches.length !== 1 || zScroll.classList.contains('zoomed')) { swipe = null; return; }
+  swipe = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+}, { passive: true });
+zScroll.addEventListener('touchend', e => {
+  if (!swipe) return;
+  const t = e.changedTouches[0], dx = t.clientX - swipe.x, dy = t.clientY - swipe.y;
+  swipe = null;
+  if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) { swiped = true; setTimeout(() => swiped = false, 400); showZ(zAt + (dx < 0 ? 1 : -1)); }
+}, { passive: true });
+
+// Touch screens get touch instructions
+if (matchMedia('(pointer: coarse)').matches) {
+  document.getElementById('hint').textContent = 'Swipe to turn pages · tap the magnifier to zoom';
+}
 
 // Full screen
 document.getElementById('fsBtn').onclick = async () => {
@@ -337,7 +451,12 @@ document.getElementById('fsBtn').onclick = async () => {
 
 // Keyboard
 document.addEventListener('keydown', e => {
-  if (!zoom.hidden) { if (e.key === 'Escape') closeZoom(); return; }
+  if (!zoom.hidden) {
+    if (e.key === 'Escape') closeZoom();
+    else if (e.key === 'ArrowRight') showZ(zAt + 1);
+    else if (e.key === 'ArrowLeft') showZ(zAt - 1);
+    return;
+  }
   if (e.target.tagName === 'SELECT') return;
   if (e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); next(); }
   else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); prev(); }
