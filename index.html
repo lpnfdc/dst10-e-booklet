@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dance Series Track 10</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Layout: one-screen reader — slim marquee header, the book centred on a night-sky stage, a transport bar with page thumbnails below. Single dark look, matching the printed booklet. */
+:root {
+  --night: #12041f;
+  --night-2: #1d0833;
+  --panel: rgba(37, 12, 62, 0.82);
+  --line: rgba(196, 140, 255, 0.22);
+  --text: #f4ecff;
+  --muted: #b9a5d6;
+  --violet: #a54bff;
+  --gold: #ffc23d;
+  --pink: #ff3d8b;
+  --display: "Anton", "Impact", "Arial Narrow", sans-serif;
+  --ui: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body {
+  background: radial-gradient(120% 80% at 50% 45%, var(--night-2) 0%, var(--night) 70%) var(--night);
+  color: var(--text);
+  font-family: var(--ui);
+  overflow: hidden;
+}
+body::before {
+  content: ""; position: fixed; inset: 0; pointer-events: none;
+  background-image:
+    radial-gradient(1px 1px at 12% 18%, rgba(255,255,255,.7) 50%, transparent 51%),
+    radial-gradient(1px 1px at 78% 12%, rgba(255,255,255,.6) 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 88% 64%, rgba(255,255,255,.55) 50%, transparent 51%),
+    radial-gradient(1px 1px at 22% 82%, rgba(255,255,255,.5) 50%, transparent 51%),
+    radial-gradient(1px 1px at 52% 6%, rgba(255,255,255,.5) 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 6% 52%, rgba(255,255,255,.45) 50%, transparent 51%),
+    radial-gradient(1px 1px at 64% 92%, rgba(255,255,255,.5) 50%, transparent 51%),
+    radial-gradient(1px 1px at 95% 30%, rgba(255,255,255,.5) 50%, transparent 51%);
+}
+.app {
+  position: relative;
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+header {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding-block: 12px 6px;
+  min-width: 0;
+}
+.brand { min-width: 0; }
+.brand h1 {
+  margin: 0; font-family: var(--display); font-weight: 400;
+  font-size: clamp(18px, 2.4vw, 26px); letter-spacing: .04em; line-height: 1.05;
+  text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.brand h1 .d { color: #5b74ff; } .brand h1 .s { color: var(--violet); } .brand h1 .t { color: var(--pink); }
+.brand p {
+  margin: 2px 0 0; font-size: 11px; letter-spacing: .22em; text-transform: uppercase; color: var(--gold);
+}
+.tools { display: flex; gap: 6px; flex-shrink: 0; }
+button, select {
+  font: 500 13px/1 var(--ui); color: var(--text);
+  background: var(--panel); border: 1px solid var(--line); border-radius: 999px;
+  height: 36px; padding: 0 14px; cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+button:hover, select:hover { border-color: var(--violet); }
+button:focus-visible, select:focus-visible, .thumb:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+button:disabled { opacity: .35; cursor: default; }
+.icon-btn { width: 36px; padding: 0; display: inline-grid; place-items: center; }
+.icon-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+select { appearance: none; padding-right: 30px; max-width: 46vw;
+  background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+  background-position: calc(100% - 16px) 16px, calc(100% - 11px) 16px; background-size: 5px 5px; background-repeat: no-repeat; }
+select option { background: var(--night-2); color: var(--text); }
+
+.stage { position: relative; min-height: 0; display: grid; place-items: center; padding-block: 10px; }
+#book { margin: 0 auto; }
+#book .page { background: var(--night); overflow: hidden; }
+#book .page img { display: block; width: 100%; height: 100%; object-fit: cover; user-select: none; -webkit-user-drag: none; pointer-events: none; }
+.stf__parent { margin: 0 auto; }
+.stf__parent, .stf__wrapper { min-width: 0 !important; min-height: 0 !important; }
+.book-shadow { max-width: 100%; }
+.book-shadow { filter: drop-shadow(0 18px 40px rgba(0,0,0,.55)) drop-shadow(0 0 60px rgba(165,75,255,.18)); }
+
+.nav-arrow {
+  position: absolute; top: 50%; transform: translateY(-50%); z-index: 5;
+  width: 44px; height: 44px; padding: 0; display: grid; place-items: center;
+}
+.nav-arrow svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.nav-arrow.prev { left: 0; } .nav-arrow.next { right: 0; }
+
+footer {
+  display: grid; gap: 8px;
+  padding-block: 6px max(12px, env(safe-area-inset-bottom, 0px));
+}
+.transport { display: flex; align-items: center; justify-content: center; gap: 10px; }
+.counter { font: 500 13px var(--ui); color: var(--muted); font-variant-numeric: tabular-nums; min-width: 132px; text-align: center; }
+.counter b { color: var(--text); font-weight: 600; }
+.thumbs {
+  display: flex; gap: 8px; overflow-x: auto; padding: 4px 2px 6px; scrollbar-width: thin;
+  justify-content: safe center;
+}
+.thumb {
+  flex: 0 0 auto; width: 44px; aspect-ratio: 141 / 200; padding: 0; height: auto;
+  border-radius: 3px; border: 1px solid var(--line); overflow: hidden; background: var(--night);
+  opacity: .55; transition: opacity .15s, transform .15s, border-color .15s;
+}
+.thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.thumb:hover { opacity: .9; }
+.thumb[aria-current="true"] { opacity: 1; border-color: var(--gold); transform: translateY(-2px); }
+
+.zoom {
+  position: fixed; inset: 0; z-index: 50; background: rgba(10, 2, 18, .94);
+  overflow: auto; -webkit-overflow-scrolling: touch;
+  padding: max(56px, calc(env(safe-area-inset-top, 0px) + 56px)) max(16px, env(safe-area-inset-right, 0px)) max(24px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+}
+.zoom img { display: block; width: min(100%, 1060px); max-width: 100%; margin: 0 auto; border-radius: 2px; box-shadow: 0 10px 40px rgba(0,0,0,.6); }
+.zoom .close { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 12px); right: max(16px, env(safe-area-inset-right, 0px)); }
+.hint { font-size: 11px; color: var(--muted); text-align: center; letter-spacing: .04em; }
+
+@media (max-width: 640px) {
+  .nav-arrow { display: none; }
+  .tools .wide { display: none; }
+  .thumb { width: 34px; }
+  .hint { display: none; }
+  .brand h1 { white-space: normal; font-size: 17px; }
+  .brand p { font-size: 9px; letter-spacing: .16em; }
+  select { max-width: 150px; padding-left: 12px; }
+}
+@media (max-height: 520px) {
+  .thumbs, .hint { display: none; }
+  .brand p { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .thumb, button { transition: none; }
+}
+</style>
+</head>
+<body>
+
+
+<div class="app">
+  <header>
+    <div class="brand">
+      <h1><span class="d">Dance</span> <span class="s">Series</span> <span class="t">Track</span> 10</h1>
+      <p>Dance the Night Away</p>
+    </div>
+    <div class="tools">
+      <label for="toc" hidden>Jump to section</label>
+      <select id="toc" aria-label="Jump to section"></select>
+      <button class="icon-btn" id="zoomBtn" title="Read this page up close" aria-label="Read this page up close">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M11 8v6M8 11h6"/></svg>
+      </button>
+      <button class="icon-btn wide" id="fsBtn" title="Full screen" aria-label="Full screen">
+        <svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="stage" id="stage">
+    <button class="nav-arrow prev" id="prevArrow" aria-label="Previous page">
+      <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>
+    </button>
+    <div class="book-shadow"><div id="book"></div></div>
+    <button class="nav-arrow next" id="nextArrow" aria-label="Next page">
+      <svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+    </button>
+  </main>
+
+  <footer>
+    <div class="transport">
+      <button class="icon-btn" id="prevBtn" aria-label="Previous page"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <div class="counter" id="counter" aria-live="polite"></div>
+      <button class="icon-btn" id="nextBtn" aria-label="Next page"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+    </div>
+    <nav class="thumbs" id="thumbs" aria-label="Pages"></nav>
+    <div class="hint">Drag a page corner, click the edges, or use ← → keys to turn pages</div>
+  </footer>
+</div>
+
+<div class="zoom" id="zoom" hidden role="dialog" aria-label="Page close-up">
+  <button class="close" id="zoomClose">Close</button>
+  <img id="zoomImg" alt="">
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.js"></script>
+<script>
+const PAGES = ["pages/p01.jpg", "pages/p02.jpg", "pages/p03.jpg", "pages/p04.jpg", "pages/p05.jpg", "pages/p06.jpg", "pages/p07.jpg", "pages/p08.jpg", "pages/p09.jpg", "pages/p10.jpg", "pages/p11.jpg", "pages/p12.jpg"];
+const THUMBS = ["pages/thumbs/p01.jpg", "pages/thumbs/p02.jpg", "pages/thumbs/p03.jpg", "pages/thumbs/p04.jpg", "pages/thumbs/p05.jpg", "pages/thumbs/p06.jpg", "pages/thumbs/p07.jpg", "pages/thumbs/p08.jpg", "pages/thumbs/p09.jpg", "pages/thumbs/p10.jpg", "pages/thumbs/p11.jpg", "pages/thumbs/p12.jpg"];
+const LABELS = ["Front cover","Welcome to the Dance Floor","Lasallian Pointes N' Flexes Dance Company","Host & DJ","Guests","Participating Dance Companies","Participating Dance Companies","Participating Dance Companies","Participating Dance Companies","Special Recognition","Sponsors & Partners","Back cover"];
+const SECTIONS = [[0,"Front cover"],[1,"Welcome"],[2,"About LPNFDC"],[3,"Host & DJ"],[4,"Guests"],[5,"Dance Companies"],[9,"Special Recognition"],[10,"Sponsors & Partners"],[11,"Back cover"]];
+const RATIO = 1060 / 1500;
+const N = PAGES.length;
+
+const stage = document.getElementById('stage');
+const bookEl = document.getElementById('book');
+let flip = null, mode = null, current = 0;
+
+function startPage() {
+  const m = /^#page-(\d+)$/.exec(location.hash);
+  const n = m ? Math.min(Math.max(parseInt(m[1], 10), 1), N) : 1;
+  return n - 1;
+}
+
+function measure() {
+  const cs = getComputedStyle(stage);
+  const w = stage.clientWidth - (window.innerWidth > 640 ? 120 : 0);
+  const h = stage.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+  const landscape = w >= 600 && h * RATIO >= 300;
+  const pageW = Math.floor(landscape ? Math.min(w / 2, h * RATIO) : Math.min(w, h * RATIO));
+  return { landscape, pageW, bookW: landscape ? pageW * 2 : pageW };
+}
+
+function build(at) {
+  const m = measure();
+  mode = m.landscape;
+  if (flip) { flip.destroy(); }
+  const host = document.querySelector('.book-shadow');
+  host.innerHTML = '<div id="book"></div>';
+  const el = host.firstChild;
+  host.style.width = m.bookW + 'px';
+  PAGES.forEach((src, i) => {
+    const d = document.createElement('div');
+    d.className = 'page';
+    if (i === 0 || i === N - 1) d.dataset.density = 'hard';
+    const img = document.createElement('img');
+    img.src = src; img.alt = LABELS[i] + ' (page ' + (i + 1) + ')';
+    d.appendChild(img); el.appendChild(d);
+  });
+  flip = new St.PageFlip(el, {
+    width: 1060, height: 1500, size: 'stretch',
+    minWidth: 300, maxWidth: 1060, minHeight: 212, maxHeight: 1500,
+    showCover: true, usePortrait: !m.landscape, mobileScrollSupport: false,
+    maxShadowOpacity: 0.45, flippingTime: 800, startPage: at,
+    autoSize: true, showPageCorners: true
+  });
+  flip.loadFromHTML(el.querySelectorAll('.page'));
+  flip.on('flip', e => update(e.data));
+  update(at);
+}
+
+function resize() {
+  const m = measure();
+  if (!flip || m.landscape !== mode) { build(current); return; }
+  document.querySelector('.book-shadow').style.width = m.bookW + 'px';
+  flip.update();
+}
+
+function visiblePages(i) {
+  if (!mode || i === 0 || i === N - 1) return [i];
+  const left = i % 2 === 1 ? i : i - 1;
+  return [left, Math.min(left + 1, N - 1)];
+}
+
+function update(i) {
+  current = i;
+  const vis = visiblePages(i);
+  const counter = document.getElementById('counter');
+  counter.innerHTML = vis.length === 2
+    ? `Pages <b>${vis[0] + 1}–${vis[1] + 1}</b> of ${N}`
+    : `Page <b>${vis[0] + 1}</b> of ${N}`;
+  document.querySelectorAll('.thumb').forEach((t, k) => {
+    const on = vis.includes(k);
+    t.setAttribute('aria-current', on ? 'true' : 'false');
+    if (k === vis[0]) t.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+  });
+  const atStart = vis[0] === 0, atEnd = vis[vis.length - 1] === N - 1;
+  ['prevBtn','prevArrow'].forEach(id => document.getElementById(id).disabled = atStart);
+  ['nextBtn','nextArrow'].forEach(id => document.getElementById(id).disabled = atEnd);
+  let sec = 0; SECTIONS.forEach(([p], k) => { if (p <= vis[0]) sec = k; });
+  document.getElementById('toc').value = String(SECTIONS[sec][0]);
+  const h = '#page-' + (vis[0] + 1);
+  if (location.hash !== h) { try { history.replaceState(null, '', h); } catch (e) {} }
+}
+
+function go(i) { if (flip) flip.flip(i); }
+function next() { flip && flip.flipNext(); }
+function prev() { flip && flip.flipPrev(); }
+
+// Contents
+const toc = document.getElementById('toc');
+SECTIONS.forEach(([p, name]) => {
+  const o = document.createElement('option'); o.value = String(p); o.textContent = `p. ${p + 1} · ${name}`; toc.appendChild(o);
+});
+toc.addEventListener('change', () => go(parseInt(toc.value, 10)));
+
+// Thumbnails
+const thumbs = document.getElementById('thumbs');
+THUMBS.forEach((src, i) => {
+  const b = document.createElement('button');
+  b.className = 'thumb'; b.id = 'thumb-' + (i + 1);
+  b.setAttribute('aria-label', 'Go to page ' + (i + 1) + ': ' + LABELS[i]);
+  b.title = (i + 1) + ' · ' + LABELS[i];
+  b.innerHTML = '<img alt="" src="' + src + '">';
+  b.addEventListener('click', () => go(i));
+  thumbs.appendChild(b);
+});
+
+document.getElementById('prevBtn').onclick = prev;
+document.getElementById('nextBtn').onclick = next;
+document.getElementById('prevArrow').onclick = prev;
+document.getElementById('nextArrow').onclick = next;
+
+// Close-up reader
+const zoom = document.getElementById('zoom'), zoomImg = document.getElementById('zoomImg');
+let zoomPages = [], zoomAt = 0;
+function openZoom() {
+  zoomPages = visiblePages(current); zoomAt = 0;
+  zoom.innerHTML = '<button class="close" id="zoomClose">Close</button>';
+  zoomPages.forEach(k => {
+    const img = document.createElement('img'); img.src = PAGES[k]; img.alt = LABELS[k] + ' (page ' + (k + 1) + ')';
+    img.style.marginBottom = '16px'; zoom.appendChild(img);
+  });
+  zoom.querySelector('#zoomClose').onclick = closeZoom;
+  zoom.hidden = false; zoom.scrollTop = 0; zoom.querySelector('#zoomClose').focus();
+}
+function closeZoom() { zoom.hidden = true; document.getElementById('zoomBtn').focus(); }
+document.getElementById('zoomBtn').onclick = openZoom;
+zoom.addEventListener('click', e => { if (e.target === zoom) closeZoom(); });
+
+// Full screen
+document.getElementById('fsBtn').onclick = async () => {
+  try {
+    if (document.fullscreenElement) await document.exitFullscreen();
+    else await document.documentElement.requestFullscreen();
+  } catch (e) { document.getElementById('fsBtn').disabled = true; }
+};
+
+// Keyboard
+document.addEventListener('keydown', e => {
+  if (!zoom.hidden) { if (e.key === 'Escape') closeZoom(); return; }
+  if (e.target.tagName === 'SELECT') return;
+  if (e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); next(); }
+  else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); prev(); }
+  else if (e.key === 'Home') go(0);
+  else if (e.key === 'End') go(N - 1);
+});
+
+window.addEventListener('hashchange', () => { const p = startPage(); if (!visiblePages(current).includes(p)) go(p); });
+let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(resize, 120); });
+
+current = startPage();
+build(current);
+</script>
+
+</body>
+</html>
